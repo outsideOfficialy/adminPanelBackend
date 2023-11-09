@@ -202,7 +202,8 @@ function dbCreation($db, $page, $tableName)
           role TEXT,
           about TEXT,
           social_media_links TEXT,
-          preview_picture TEXT
+          preview_picture TEXT,
+          send_later TEXT
         );");
       break;
 
