@@ -162,9 +162,9 @@ function saveTableToJson($tableName, $db, $jsonName)
   }
 }
 
-function memberRecordCreate($db, $post, $tableName, $page)
+function recordCreate($db, $post, $tableName, $page)
 {
-  global $config;
+  global $config, $dirToSaveImg;
   //! создаем запись
   $newID = "";
 
@@ -185,6 +185,14 @@ function memberRecordCreate($db, $post, $tableName, $page)
     http_response_code(400);
     echo "Error saving img!";
     exit;
+  } else {
+    // записываем пути к картинкам
+    $files = array();
+    foreach ($_FILES["preview_picture"]["name"] as $key => $filename) {
+      $uploadFilePath = $dirToSaveImg . basename($filename);
+      $files[] = $uploadFilePath;
+    }
+    $post["preview_picture"] = json_encode($files);
   }
 
   if (!insertToTable($db, $tableName, $post)) {
@@ -193,7 +201,7 @@ function memberRecordCreate($db, $post, $tableName, $page)
     exit;
   }
 
-  saveTableToJson($config[$page]["tableName"], $db, $config[$page]["jsonName"]);
+  // saveTableToJson($config[$page]["tableName"], $db, $config[$page]["jsonName"]);
 }
 
 function dbCreation($db, $page, $tableName)
@@ -204,7 +212,7 @@ function dbCreation($db, $page, $tableName)
   switch ($page) {
     case "music":
       $fields = "id TEXT PRIMARY KEY,
-          album TEXT,
+          music_type TEXT,
           release_name TEXT,
           release_songs TEXT,
           preview_picture TEXT,
@@ -224,7 +232,7 @@ function dbCreation($db, $page, $tableName)
           title TEXT,
           description TEXT,
           content TEXT,
-          pictures TEXT,
+          preview_picture TEXT,
           price TEXT,
           send_later TEXT";
       break;

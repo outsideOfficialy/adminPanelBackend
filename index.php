@@ -74,43 +74,52 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       }
 
       $tableName = $config[$page]["tableName"];
-
+      if (isset($post["release_songs"])) $post["release_songs"] = json_encode($post["release_songs"]);
+      if (isset($post["social_media_links"])) {
+        $post["social_media_links"] = json_encode($post["social_media_links"]);
+      }
+      if (!isset($post["send_later"]) || $post["send_later"] == "") $post["send_later"] = "-";
+      print_r($post);
       dbCreation($db, $page, $tableName);
-      if ($page == "member_page") {
-        $post["social_media_links"] = json_encode($post["social_media_links"]);
-        $post["preview_picture"] = $dirToSaveImg . $_FILES["preview_picture"]["name"][0];
-      }
-      memberRecordCreate($db, $post, $tableName, $page);
-      break;
-    }
-  case "PUT": {
-      //! редактируем запись
-      if ($page == "member_page") {
-        $post["social_media_links"] = json_encode($post["social_media_links"]);
-      }
-      $post["preview_picture"] = $dirToSaveImg . $_FILES["preview_picture"]["name"];
-      $imgName = $post["preview_picture"];
-      $memberInfo = findByID($post["id"], $tableName, $db);
-      if (!$memberInfo) {
-        http_response_code(404);
-        echo "Member not found";
-        exit;
-      }
-      if (!saveImg($_FILES)) {
-        http_response_code(400);
-        echo "Error saving img!";
-        exit;
-      }
-      if (!insertToTable(
-        $db,
-        $tableName,
-        $post
-      )) {
-        http_response_code(400);
-        echo "Failed to insert into table!";
-        exit;
+
+      if ($post["id"] === "") {
+        recordCreate($db, $post, $tableName, $page);
+      } else {
+        // !редактирование записи....
+        if ($page == "member_page") {
+          $post["social_media_links"] = json_encode($post["social_media_links"]);
+        }
+        $post["preview_picture"] = $dirToSaveImg . $_FILES["preview_picture"]["name"];
+        $imgName = $post["preview_picture"];
+        $memberInfo = findByID($post["id"], $tableName, $db);
+        if (!$memberInfo) {
+          http_response_code(404);
+          echo "Member not found";
+          exit;
+        }
+        if (!saveImg($_FILES)) {
+          http_response_code(400);
+          echo "Error saving img!";
+          exit;
+        }
+        if (!insertToTable(
+          $db,
+          $tableName,
+          $post
+        )) {
+          http_response_code(400);
+          echo "Failed to insert into table!";
+          exit;
+        }
       }
       break;
     }
+  case "DELETE": {
+
+      break;
+    }
+  default:
+    http_response_code(404);
+    echo "Method not found!";
 }
 // echo "</pre>";
