@@ -2,15 +2,44 @@
 
 include("./functions.php");
 
-echo "<pre>";
+// echo "<pre>";
+
+/**
+ * music
+ * news
+ * merch
+ * members
+ */
+
+$url = $_GET["url"];
+$req = explode("/", $url);
+
+if (!sizeof($req)) {
+  http_response_code(400);
+  echo "Missing arguments in path";
+  exit;
+}
+
+
 
 switch ($_SERVER["REQUEST_METHOD"]) {
   case "GET": {
-      $page = $_GET["page"];
-      $id = $_GET["id"];
-      $tableName = $config[$page]["tableName"];
+      if (sizeof($req) !== 2) {
+        http_response_code(400);
+        echo "Missing arguments in path";
+        exit;
+      }
 
+      $page = $req[0];
+      $id = $req[1];
+      $tableName = $config[$page]["tableName"];
       $db = connectToDB($db_path);
+
+      if (!$db) {
+        http_response_code(400);
+        echo "Error connecting db!";
+        exit;
+      }
 
       $data = findByID($id, $tableName, $db);
 
@@ -33,16 +62,16 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       break;
     }
   case "POST": {
+
+      // тут уже смотреть, есть айдишник или нету
       $post = $_POST;
-      $page = $post["page"];
+      $page = $req[0];
       $db = connectToDB($db_path);
 
       if (!$db) {
         echo "Error connecting db";
         exit;
       }
-
-      unset($post["page"]);
 
       $tableName = $config[$page]["tableName"];
 
@@ -84,4 +113,4 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       break;
     }
 }
-echo "</pre>";
+// echo "</pre>";

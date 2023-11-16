@@ -11,21 +11,27 @@ $dirToSaveImg = "img/";
 
 
 $config = array(
-  "member_page" => array(
+  "music" => array(
+    "tableName" => "music",
+    "jsonName" => "music.json",
+    "columnSearch" => "release_name"
+  ),
+  "news" => array(
+    "tableName" => "news",
+    "jsonName" => "news.json",
+    "columnSearch" => "title"
+  ),
+  "merch" => array(
+    "tableName" => "merch",
+    "jsonName" => "merch.json",
+    "columnSearch" => "title"
+  ),
+  "members" => array(
     "tableName" => "members",
     "jsonName" => "members.json",
     "columnSearch" => "nickname"
-  )
+  ),
 );
-
-
-// $tableNames = array(
-//   "member_page" => "members",
-// );
-
-// $jsonNames = array(
-//   "member_page" => "members.json",
-// );
 
 //! ---------------------------------------------------------
 // генерирует id для записей
@@ -65,7 +71,6 @@ function getAllDb($db, $tableName)
   }
 
   return $data;
-
 }
 
 // поиск строки по айдишнику
@@ -147,9 +152,10 @@ function deleteFile($path)
   }
 }
 
-function saveTableToJson($tableName, $db, $jsonName) {
+function saveTableToJson($tableName, $db, $jsonName)
+{
   if (file_exists($jsonName)) {
-    file_put_contents($jsonName, json_encode(getAllDb($db, $tableName)));    
+    file_put_contents($jsonName, json_encode(getAllDb($db, $tableName)));
   } else {
     http_response_code(404);
     echo "Json file to save data not found";
@@ -192,24 +198,51 @@ function memberRecordCreate($db, $post, $tableName, $page)
 
 function dbCreation($db, $page, $tableName)
 {
+
+  $fields = "";
+
   switch ($page) {
-    case "member_page":
-      $db->exec("
-        CREATE TABLE IF NOT EXISTS $tableName (
-          id TEXT PRIMARY KEY,
+    case "music":
+      $fields = "id TEXT PRIMARY KEY,
+          album TEXT,
+          release_name TEXT,
+          release_songs TEXT,
+          preview_picture TEXT,
+          social_media_links TEXT,
+          send_later TEXT";
+      break;
+    case "news":
+      $fields = "id TEXT PRIMARY KEY,
+          title TEXT,
+          subtitle TEXT,
+          content TEXT,
+          preview_picture TEXT,
+          send_later TEXT";
+      break;
+    case "merch":
+      $fields = "id TEXT PRIMARY KEY,
+          title TEXT,
+          description TEXT,
+          content TEXT,
+          pictures TEXT,
+          price TEXT,
+          send_later TEXT";
+      break;
+    case "members":
+      $fields = "id TEXT PRIMARY KEY,
           nickname TEXT,
           birthdate TEXT,
           role TEXT,
           about TEXT,
           social_media_links TEXT,
           preview_picture TEXT,
-          send_later TEXT
-        );");
+          send_later TEXT";
       break;
-
     default:
       http_response_code(400);
       echo "Error with creation db";
       exit;
   }
+
+  $db->exec("CREATE TABLE IF NOT EXISTS $tableName ($fields);");
 }
