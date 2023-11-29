@@ -201,7 +201,7 @@ function recordCreate($db, $post, $tableName, $page)
     exit;
   }
 
-  // saveTableToJson($config[$page]["tableName"], $db, $config[$page]["jsonName"]);
+  saveTableToJson($config[$page]["tableName"], $db, $config[$page]["jsonName"]);
 }
 
 function dbCreation($db, $page, $tableName)
