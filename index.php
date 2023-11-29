@@ -20,8 +20,6 @@ if (!sizeof($req)) {
   exit;
 }
 
-
-
 switch ($_SERVER["REQUEST_METHOD"]) {
   case "GET": {
       if (sizeof($req) !== 2) {
