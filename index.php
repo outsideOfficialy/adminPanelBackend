@@ -60,7 +60,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       break;
     }
   case "POST": {
-
       // тут уже смотреть, есть айдишник или нету
       $post = $_POST;
       $page = $req[0];
