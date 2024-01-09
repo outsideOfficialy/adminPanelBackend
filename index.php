@@ -9,10 +9,12 @@ include("./functions.php");
  * news
  * merch
  * members
+ * slide
  */
 
 $url = $_GET["url"];
 $req = explode("/", $url);
+
 
 if (!sizeof($req)) {
   http_response_code(400);
@@ -56,7 +58,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         exit;
       }
 
-      echo json_encode($data);
+      echo json_encode(array($data));
       break;
     }
   case "POST": {
@@ -76,47 +78,55 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         $post["social_media_links"] = json_encode($post["social_media_links"]);
       }
       if (!isset($post["send_later"]) || $post["send_later"] == "") $post["send_later"] = "-";
-      print_r($post);
       dbCreation($db, $page, $tableName);
 
       if ($post["id"] === "") {
         recordCreate($db, $post, $tableName, $page);
       } else {
+        exit;
         // !редактирование записи....
-        if ($page == "member_page") {
-          $post["social_media_links"] = json_encode($post["social_media_links"]);
-        }
-        $post["preview_picture"] = $dirToSaveImg . $_FILES["preview_picture"]["name"];
-        $imgName = $post["preview_picture"];
-        $memberInfo = findByID($post["id"], $tableName, $db);
-        if (!$memberInfo) {
-          http_response_code(404);
-          echo "Member not found";
-          exit;
-        }
-        if (!saveImg($_FILES)) {
-          http_response_code(400);
-          echo "Error saving img!";
-          exit;
-        }
-        if (!insertToTable(
-          $db,
-          $tableName,
-          $post
-        )) {
-          http_response_code(400);
-          echo "Failed to insert into table!";
-          exit;
-        }
+        
       }
       break;
     }
   case "DELETE": {
+      echo "Deleting $id of page $page in table $tableName";
+      http_response_code(200);
+      exit;
 
+      if (sizeof($req) !== 2) {
+        http_response_code(400);
+        echo "Missing arguments in path";
+        exit;
+      }
+      $page = $req[0];
+      $id = $req[1];
+      $tableName = $config[$page]["tableName"];
+      $db = connectToDB($db_path);
+
+      if (!$db) {
+        http_response_code(400);
+        echo "Error connecting db!";
+        exit;
+      }
+
+      $query = "DELETE FROM $tableName WHERE id = :id";
+      $stmt = $db->prepare($query);
+      $stmt->bindParam(':id', $id, SQLITE3_INTEGER);
+      $stmt->execute();
+
+      if ($stmt) {
+        http_response_code(200);
+        echo "Field with id:$id successfully deleted";
+        exit;
+      } else {
+        http_response_code(400);
+        echo "Ошибка удаления строки.";
+        exit;
+      }
       break;
     }
   default:
     http_response_code(404);
     echo "Method not found!";
 }
-// echo "</pre>";

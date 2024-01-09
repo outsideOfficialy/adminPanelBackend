@@ -31,6 +31,11 @@ $config = array(
     "jsonName" => "members.json",
     "columnSearch" => "nickname"
   ),
+  "slider" => array(
+    "tableName" => "slider",
+    "jsonName" => "slider.json",
+    "columnSearch" => "title"
+  )
 );
 
 //! ---------------------------------------------------------
@@ -129,9 +134,13 @@ function saveImg($files)
 {
   global $dirToSaveImg;
 
-  foreach ($files["preview_picture"]["name"] as $key => $filename) {
-    $uploadFile = $dirToSaveImg . basename($filename);
-    if (!move_uploaded_file($files["preview_picture"]["tmp_name"][$key], $uploadFile)) return false;
+  foreach($files as $file_field) {
+
+    $fileAmnt = sizeof($file_field["name"]);
+    for ($i = 0; $i < $fileAmnt; $i += 1) {
+      $uploadFile = $dirToSaveImg . basename($file_field["name"][$i]);
+      if (!move_uploaded_file($file_field["tmp_name"][$i], $uploadFile)) return false;
+    }
   }
   return true;
 }
@@ -181,18 +190,30 @@ function recordCreate($db, $post, $tableName, $page)
   $post["id"] = $newID;
 
 
+  foreach ($_FILES as $field_name => $file_field) {
+    $fileAmnt = sizeof($file_field["name"]);
+    for ($i = 0; $i < $fileAmnt; $i += 1) {
+      $_FILES[$field_name]["name"][$i] = time() . "_" . $_FILES[$field_name]["name"][$i];
+    }
+  }
+
   if (!saveImg($_FILES)) {
     http_response_code(400);
     echo "Error saving img!";
     exit;
   } else {
     // записываем пути к картинкам
-    $files = array();
-    foreach ($_FILES["preview_picture"]["name"] as $key => $filename) {
-      $uploadFilePath = $dirToSaveImg . basename($filename);
-      $files[] = $uploadFilePath;
+    foreach ($_FILES as $key => $file_field) {
+      $files = array();
+      $fileAmnt = sizeof($file_field["name"]);
+
+      for ($i = 0; $i < $fileAmnt; $i += 1) {
+        $uploadFilePath = $dirToSaveImg . basename($file_field["name"][$i]);
+        $files[] = $uploadFilePath;
+      }
+      $post[$key] = json_encode($files);
     }
-    $post["preview_picture"] = json_encode($files);
+
   }
 
   if (!insertToTable($db, $tableName, $post)) {
@@ -244,6 +265,14 @@ function dbCreation($db, $page, $tableName)
           about TEXT,
           social_media_links TEXT,
           preview_picture TEXT,
+          send_later TEXT";
+      break;
+    case "slider":
+      $fields = "id TEXT PRIMARY KEY,
+          title TEXT,
+          link TEXT,
+          preview_picture_mobile TEXT,
+          preview_picture_desktop TEXT,
           send_later TEXT";
       break;
     default:
