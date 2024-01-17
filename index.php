@@ -15,7 +15,6 @@ include("./functions.php");
 $url = $_GET["url"];
 $req = explode("/", $url);
 
-
 if (!sizeof($req)) {
   http_response_code(400);
   echo "Missing arguments in path";
@@ -83,9 +82,41 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       if ($post["id"] === "") {
         recordCreate($db, $post, $tableName, $page);
       } else {
-        exit;
         // !редактирование записи....
-        
+        $recordId = $req[1];
+        $dataToEdit = findByID($recordId, $config[$page]["tableName"], $db);
+
+        if (!$dataToEdit) {
+          http_response_code(404);
+          echo "Record wasn't found!";
+          exit;
+        }
+
+        if (!recordDelete($db, $recordId, $tableName)) {
+          http_response_code(400);
+          echo "Error with row deleting";
+          exit;
+        }
+        addTimeToImg();
+
+        foreach ($_FILES as $key => $val) {
+          foreach ($val["name"] as $idx => $picName) {
+            if ($picName !== "") {
+              saveImg($_FILES);
+              $dataToEdit[$key] = json_encode(addPathesToImgs($_FILES[$key]["name"]));
+            }
+          }
+        }
+
+        foreach($_POST as $key => $val) {
+          $dataToEdit[$key] = $_POST[$key];
+        }
+
+        if (!insertToTable($db, $tableName, $dataToEdit)) {
+          http_response_code(400);
+          echo "Error with record rewriting";
+          exit;
+        }
       }
       break;
     }
@@ -110,12 +141,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         exit;
       }
 
-      $query = "DELETE FROM $tableName WHERE id = :id";
-      $stmt = $db->prepare($query);
-      $stmt->bindParam(':id', $id, SQLITE3_INTEGER);
-      $stmt->execute();
-
-      if ($stmt) {
+      if (recordDelete($db, $id, $tableName)) {
         http_response_code(200);
         echo "Field with id:$id successfully deleted";
         exit;

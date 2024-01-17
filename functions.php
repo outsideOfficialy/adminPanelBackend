@@ -7,6 +7,7 @@
 //! ------------------------VARIABLES------------------------
 $db_path = "dataBase.db";
 
+// обязательно указывать после конечной папки слеш
 $dirToSaveImg = "img/";
 
 
@@ -54,10 +55,8 @@ function idGenerator()
 
 function connectToDB($dbName)
 {
-  global $db_path;
-
-  if (file_exists(__DIR__ . "\\" . $dbName)) {
-    $db = new SQLite3($db_path);
+  if (file_exists($dbName)) {
+    $db = new SQLite3($dbName);
     return $db;
   } else {
     return null;
@@ -115,6 +114,7 @@ function findByString($str, $tableName, $db, $columnName)
 // вставка в таблицу строки данных
 function insertToTable($db, $tableName, $data)
 {
+
   $sql = "INSERT INTO $tableName (" . implode(", ", array_keys($data)) . ") VALUES (" . implode(", ", array_fill(0, count($data), "?")) . ")";
 
   $stmt = $db->prepare($sql);
@@ -134,7 +134,7 @@ function saveImg($files)
 {
   global $dirToSaveImg;
 
-  foreach($files as $file_field) {
+  foreach ($files as $file_field) {
 
     $fileAmnt = sizeof($file_field["name"]);
     for ($i = 0; $i < $fileAmnt; $i += 1) {
@@ -143,6 +143,54 @@ function saveImg($files)
     }
   }
   return true;
+}
+
+function addPathesToImgs($imgArr)
+{
+  global $dirToSaveImg;
+  $newArr = array();
+
+  foreach ($imgArr as $key => $val) {
+    $newArr[] = $dirToSaveImg . $val;
+  }
+
+  return $newArr;
+}
+
+//! ВНИМАНИЕ!!! Функция ищет по названию файла в папке, которая указана в $dirToSaveImg, то что по факту
+//! записано в бд - все равно, это обрежеться и возьмется только название файла
+function deleteImg($picArray)
+{
+  global $dirToSaveImg;
+
+  foreach ($picArray as $idx => $picName) {
+    $slash = mb_strrpos($picName, "/");
+
+    // если в пути содержится слеш, то есть файл в какой-то папке
+    if ($slash !== false) {
+      $fileName = substr($picName, $slash + 1, strlen($picName) - 1);
+
+      $filePath = $dirToSaveImg . $fileName;
+      if (file_exists($filePath)) {
+        if (!unlink($filePath)) {
+          http_response_code(400);
+          echo "Error with deleting img";
+        }
+      } else {
+        http_response_code(404);
+        echo "File not found";
+        exit;
+      }
+    } //если не дай бог файл вне папки, а на корню с проектом
+    else {
+      if (file_exists($picName)) {
+        if (!unlink($picName)) {
+          http_response_code(400);
+          echo "Error with deleting img";
+        }
+      }
+    }
+  }
 }
 
 // получить все значения одной колонки из таблицы
@@ -171,6 +219,19 @@ function saveTableToJson($tableName, $db, $jsonName)
   }
 }
 
+function addTimeToImg()
+{
+  $idx = 0;
+  foreach ($_FILES as $field_name => $file_field) {
+    $fileAmnt = sizeof($file_field["name"]);
+    if ($file_field["name"][0] == "") return;
+    for ($i = 0; $i < $fileAmnt; $i += 1) {
+      $_FILES[$field_name]["name"][$i] = time() . $idx . "_" . $_FILES[$field_name]["name"][$i];
+    }
+    $idx++;
+  }
+}
+
 function recordCreate($db, $post, $tableName, $page)
 {
   global $config, $dirToSaveImg;
@@ -190,30 +251,24 @@ function recordCreate($db, $post, $tableName, $page)
   $post["id"] = $newID;
 
 
-  foreach ($_FILES as $field_name => $file_field) {
-    $fileAmnt = sizeof($file_field["name"]);
-    for ($i = 0; $i < $fileAmnt; $i += 1) {
-      $_FILES[$field_name]["name"][$i] = time() . "_" . $_FILES[$field_name]["name"][$i];
-    }
-  }
+  addTimeToImg();
 
   if (!saveImg($_FILES)) {
     http_response_code(400);
     echo "Error saving img!";
     exit;
-  } else {
-    // записываем пути к картинкам
-    foreach ($_FILES as $key => $file_field) {
-      $files = array();
-      $fileAmnt = sizeof($file_field["name"]);
+  }
 
-      for ($i = 0; $i < $fileAmnt; $i += 1) {
-        $uploadFilePath = $dirToSaveImg . basename($file_field["name"][$i]);
-        $files[] = $uploadFilePath;
-      }
-      $post[$key] = json_encode($files);
+  // записываем пути к картинкам
+  foreach ($_FILES as $key => $file_field) {
+    $files = array();
+    $fileAmnt = sizeof($file_field["name"]);
+
+    for ($i = 0; $i < $fileAmnt; $i += 1) {
+      $uploadFilePath = $dirToSaveImg . basename($file_field["name"][$i]);
+      $files[] = $uploadFilePath;
     }
-
+    $post[$key] = json_encode($files);
   }
 
   if (!insertToTable($db, $tableName, $post)) {
@@ -223,6 +278,19 @@ function recordCreate($db, $post, $tableName, $page)
   }
 
   saveTableToJson($config[$page]["tableName"], $db, $config[$page]["jsonName"]);
+}
+
+function recordDelete($db, $id, $tableName)
+{
+  $id = SQLite3::escapeString($id);
+
+  $stmt = $db->prepare("DELETE FROM $tableName WHERE id = :id");
+  $stmt->bindValue(':id', $id, SQLITE3_TEXT);
+  $result = $stmt->execute();
+
+  $allDb = getAllDb($db, $tableName);
+
+  return $result;
 }
 
 function dbCreation($db, $page, $tableName)
