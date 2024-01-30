@@ -12,11 +12,10 @@ include("./functions.php");
  * slide
  */
 
-echo "Hello world";
-exit;
-
 $url = $_GET["url"];
 $req = explode("/", $url);
+
+if ($req[0] == "") array_shift($req);
 
 if (!sizeof($req)) {
   http_response_code(400);
