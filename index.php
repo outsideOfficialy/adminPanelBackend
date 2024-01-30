@@ -12,6 +12,9 @@ include("./functions.php");
  * slide
  */
 
+echo "Hello world";
+exit;
+
 $url = $_GET["url"];
 $req = explode("/", $url);
 
@@ -108,7 +111,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
           }
         }
 
-        foreach($_POST as $key => $val) {
+        foreach ($_POST as $key => $val) {
           $dataToEdit[$key] = $_POST[$key];
         }
 

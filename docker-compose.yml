@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  admin-panel-backend:
+    image: php-srv
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./.htaccess:/etc/apache2/sites-available/000-default.conf
+    hostname: someName
