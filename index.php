@@ -110,8 +110,8 @@ switch ($_SERVER["REQUEST_METHOD"]) {
           }
         }
 
-        foreach ($_POST as $key => $val) {
-          $dataToEdit[$key] = $_POST[$key];
+        foreach ($post as $key => $val) {
+          $dataToEdit[$key] = $post[$key];
         }
 
         if (!insertToTable($db, $tableName, $dataToEdit)) {
