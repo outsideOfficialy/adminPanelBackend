@@ -15,6 +15,11 @@ include("./functions.php");
 $url = $_GET["url"];
 $req = explode("/", $url);
 
+if (strpos($_SERVER["HTTP_REFERER"], "www.admin.outside-official.com") === false && 
+($_SERVER["REQUEST_METHOD"] === "DELETE" || $_SERVER["REQUEST_METHOD"] === "POST")) {
+  die("Access Denied!.");
+}
+
 if ($req[0] == "") array_shift($req);
 
 if (!sizeof($req)) {
@@ -80,6 +85,8 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       }
       if (!isset($post["send_later"]) || $post["send_later"] == "") $post["send_later"] = "-";
       dbCreation($db, $page, $tableName);
+      exit;
+
 
       if ($post["id"] === "") {
         recordCreate($db, $post, $tableName, $page);

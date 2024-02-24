@@ -55,11 +55,24 @@ function idGenerator()
 
 function connectToDB($dbName)
 {
-  if (file_exists($dbName)) {
-    $db = new SQLite3($dbName);
-    return $db;
-  } else {
+  // if (file_exists($dbName)) {
+  //   $db = new SQLite3($dbName);
+  //   return $db;
+  // } else {
+  //   return null;
+  // }
+  $servername = "localhost";
+  $username = "outsideo";
+  $password = "2kAi33rh*j7SO*Dk";
+  $dbname = "outsideo";
+
+  $conn = new mysqli($servername, $username, $password, $dbname);
+
+  if ($conn->connect_error) {
+    die("Error connecting to db: " . $conn->connect_error);
     return null;
+  } else {
+    return $conn;
   }
 }
 
@@ -70,7 +83,7 @@ function getAllDb($db, $tableName)
 
   $res = $db->query("SELECT * FROM $tableName");
 
-  while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+  while ($row = $res->fetch_assoc()) {
     $data[] = $row;
   }
 
@@ -80,15 +93,14 @@ function getAllDb($db, $tableName)
 // поиск строки по айдишнику
 function findByID($id, $tableName, $db)
 {
-  $sql = "SELECT * FROM $tableName WHERE id = :id";
-
+  $sql = "SELECT * FROM $tableName WHERE id = ?";
   $stmt = $db->prepare($sql);
-  $stmt->bindValue(':id', $id, SQLITE3_TEXT);
-
-  $result = $stmt->execute();
+  $stmt->bind_param("s", $id);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result) {
-    return $result->fetchArray(SQLITE3_ASSOC);
+    return $result->fetch_assoc();
   }
 
   return false;
@@ -97,37 +109,40 @@ function findByID($id, $tableName, $db)
 // поиск по определенной строке 
 function findByString($str, $tableName, $db, $columnName)
 {
-  $sql = "SELECT * FROM $tableName WHERE $columnName LIKE :search_string";
+  $sql = "SELECT * FROM $tableName WHERE $columnName LIKE ?";
   $stmt = $db->prepare($sql);
-  $stmt->bindValue(':search_string', '%' . $str . '%', SQLITE3_TEXT);
-
-  $result = $stmt->execute();
+  $search_string = "%$str%";
+  $stmt->bind_param("s", $search_string);
+  $stmt->execute();
+  $result = $stmt->get_result();
   $data = [];
 
-  while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+  while ($row = $result->fetch_assoc()) {
     $data[] = $row;
   }
 
   return empty($data) ? false : $data;
 }
 
+
 // вставка в таблицу строки данных
 function insertToTable($db, $tableName, $data)
 {
+  $keys = implode(", ", array_keys($data));
+  $values = array_values($data);
+  $placeholders = str_repeat("?, ", count($values) - 1) . "?";
 
-  $sql = "INSERT INTO $tableName (" . implode(", ", array_keys($data)) . ") VALUES (" . implode(", ", array_fill(0, count($data), "?")) . ")";
-
+  $sql = "INSERT INTO $tableName ($keys) VALUES ($placeholders)";
   $stmt = $db->prepare($sql);
 
-  $i = 1;
-  foreach ($data as $value) {
-    $stmt->bindValue($i++, $value, SQLITE3_TEXT);
-  }
+  $types = str_repeat("s", count($values));
+  $stmt->bind_param($types, ...$values);
 
   $result = $stmt->execute();
 
   return $result ? true : false;
 }
+
 
 // сохранение картинок
 function saveImg($files)
@@ -282,15 +297,15 @@ function recordCreate($db, $post, $tableName, $page)
 
 function recordDelete($db, $id, $tableName)
 {
-  $id = SQLite3::escapeString($id);
+  $id = mysqli_real_escape_string($db, $id);
 
-  $stmt = $db->prepare("DELETE FROM $tableName WHERE id = :id");
-  $stmt->bindValue(':id', $id, SQLITE3_TEXT);
-  $result = $stmt->execute();
+  $stmt = $db->prepare("DELETE FROM `$tableName` WHERE id = ?");
+  $stmt->bind_param('s', $id);
+  $stmt->execute();
 
   $allDb = getAllDb($db, $tableName);
 
-  return $result;
+  return $stmt->affected_rows;
 }
 
 function dbCreation($db, $page, $tableName)
@@ -349,5 +364,11 @@ function dbCreation($db, $page, $tableName)
       exit;
   }
 
-  $db->exec("CREATE TABLE IF NOT EXISTS $tableName ($fields);");
+  // $db->exec("CREATE TABLE IF NOT EXISTS $tableName ($fields);");
+  $query = "CREATE TABLE IF NOT EXISTS $tableName ($fields)";
+  if ($db->query($query) === TRUE) {
+    echo "Table $tableName created successfully";
+  } else {
+    echo "Error creating table: " . $db->error;
+  }
 }
