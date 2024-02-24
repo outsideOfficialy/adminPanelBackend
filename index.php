@@ -130,9 +130,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       break;
     }
   case "DELETE": {
-      echo "Deleting $id of page $page in table $tableName";
-      http_response_code(200);
-      exit;
+      // echo "Deleting $id of page $page in table $tableName";
+      // http_response_code(200);
+      // exit;
 
       if (sizeof($req) !== 2) {
         http_response_code(400);
