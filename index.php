@@ -155,11 +155,10 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         http_response_code(200);
         echo "Field with id:$id successfully deleted";
         exit;
-      } else {
-        http_response_code(400);
-        echo "Ошибка удаления строки.";
-        exit;
       }
+      http_response_code(400);
+      echo "Ошибка удаления строки.";
+      exit;
       break;
     }
   default:
