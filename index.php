@@ -19,6 +19,7 @@ if (
   strpos($_SERVER["HTTP_REFERER"], "www.admin.outside-official.com") === false &&
   ($_SERVER["REQUEST_METHOD"] === "DELETE" || $_SERVER["REQUEST_METHOD"] === "POST")
 ) {
+  http_response_code(403);
   die("Access Denied!.");
 }
 
