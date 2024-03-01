@@ -15,13 +15,13 @@ include("./functions.php");
 $url = $_GET["url"];
 $req = explode("/", $url);
 
-if (
-  strpos($_SERVER["HTTP_REFERER"], "www.admin.outside-official.com") === false &&
-  ($_SERVER["REQUEST_METHOD"] === "DELETE" || $_SERVER["REQUEST_METHOD"] === "POST")
-) {
-  http_response_code(403);
-  die("Access Denied!.");
-}
+// if (
+//   strpos($_SERVER["HTTP_REFERER"], "www.admin.outside-official.com") === false &&
+//   ($_SERVER["REQUEST_METHOD"] === "DELETE" || $_SERVER["REQUEST_METHOD"] === "POST")
+// ) {
+//   http_response_code(403);
+//   die("Access Denied!.");
+// }
 
 if ($req[0] == "") array_shift($req);
 
@@ -95,6 +95,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         // !редактирование записи....
         $recordId = $req[1];
         $dataToEdit = findByID($recordId, $config[$page]["tableName"], $db);
+        deleteImg(json_decode($dataToEdit["preview_picture"]));
 
         if (!$dataToEdit) {
           http_response_code(404);
@@ -150,6 +151,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo "Error connecting db!";
         exit;
       }
+
+      $recordToDelete = findByID($id, $tableName, $db);
+      deleteImg(json_decode($recordToDelete["preview_picture"]));
 
       if (recordDelete($db, $id, $tableName)) {
         http_response_code(200);

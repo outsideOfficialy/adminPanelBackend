@@ -175,6 +175,7 @@ function deleteImg($picArray)
         if (!unlink($filePath)) {
           http_response_code(400);
           echo "Error with deleting img";
+          exit;
         }
       } else {
         http_response_code(404);
