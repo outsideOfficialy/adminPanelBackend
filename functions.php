@@ -170,7 +170,7 @@ function deleteImg($picArray)
     if ($slash !== false) {
       $fileName = substr($picName, $slash + 1, strlen($picName) - 1);
 
-      $filePath = $dirToSaveImg . $fileName;
+      $filePath = __DIR__ . "/" . $dirToSaveImg . $fileName;
       if (file_exists($filePath)) {
         if (!unlink($filePath)) {
           http_response_code(400);
