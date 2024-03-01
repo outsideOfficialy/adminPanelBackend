@@ -274,6 +274,7 @@ function recordCreate($db, $post, $tableName, $page)
   if (!insertToTable($db, $tableName, $post)) {
     http_response_code(400);
     echo "Failed to insert into table!";
+    echo "\n" . $db->lastErrorMsg();
     exit;
   }
 
