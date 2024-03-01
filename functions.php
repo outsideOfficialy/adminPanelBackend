@@ -170,16 +170,18 @@ function deleteImg($picArray)
     if ($slash !== false) {
       $fileName = substr($picName, $slash + 1, strlen($picName) - 1);
 
-      $filePath = __DIR__ . "/" . $dirToSaveImg . $fileName;
+      $filePath = $dirToSaveImg . $fileName;
       if (file_exists($filePath)) {
         if (!unlink($filePath)) {
           http_response_code(400);
           echo "Error with deleting img";
+          return false;
           exit;
         }
       } else {
         http_response_code(404);
         echo "File not found";
+        // return false;
         exit;
       }
     } //если не дай бог файл вне папки, а на корню с проектом
@@ -192,6 +194,8 @@ function deleteImg($picArray)
       }
     }
   }
+
+  return true;
 }
 
 // получить все значения одной колонки из таблицы

@@ -95,7 +95,17 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         // !редактирование записи....
         $recordId = $req[1];
         $dataToEdit = findByID($recordId, $config[$page]["tableName"], $db);
-        deleteImg(json_decode($dataToEdit["preview_picture"]));
+
+        $successDeletion;
+        if (isset($dataToEdit["preview_picture"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture"]));
+        if (isset($dataToEdit["preview_picture_mobile"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_mobile"]));
+        if (isset($dataToEdit["preview_picture_desktop"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_desktop"]));
+
+        if (!$successDeletion) {
+          http_response_code(400);
+          echo "Error deleting img!";
+          exit;
+        }
 
         if (!$dataToEdit) {
           http_response_code(404);
@@ -153,16 +163,32 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       }
 
       $recordToDelete = findByID($id, $tableName, $db);
-      deleteImg(json_decode($recordToDelete["preview_picture"]));
+
+      print_r($recordToDelete);
+
+      //exit;
+
+      $successDeletion;
+      if (isset($recordToDelete["preview_picture"])) $successDeletion = deleteImg(json_decode($recordToDelete["preview_picture"]));
+      if (isset($recordToDelete["preview_picture_mobile"])) $successDeletion = deleteImg(json_decode($recordToDelete["preview_picture_mobile"]));
+      if (isset($recordToDelete["preview_picture_desktop"])) $successDeletion = deleteImg(json_decode($recordToDelete["preview_picture_desktop"]));
+
+      if (!$successDeletion) {
+        http_response_code(400);
+        echo "Error deleting img!";
+        exit;
+      }
 
       if (recordDelete($db, $id, $tableName)) {
         http_response_code(200);
         echo "Field with id:$id successfully deleted";
         exit;
       }
-      http_response_code(400);
-      echo "Ошибка удаления строки.";
-      exit;
+      if (deleteImg(json_decode($recordToDelete["preview_picture"]))) {
+      } else {
+        echo "error with deleting img";
+        exit;
+      }
       break;
     }
   default:
