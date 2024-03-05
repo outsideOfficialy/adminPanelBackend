@@ -166,30 +166,34 @@ function deleteImg($picArray)
   foreach ($picArray as $idx => $picName) {
     $slash = mb_strrpos($picName, "/");
 
-    // если в пути содержится слеш, то есть файл в какой-то папке
-    if ($slash !== false) {
-      $fileName = substr($picName, $slash + 1, strlen($picName) - 1);
-
-      $filePath = $dirToSaveImg . $fileName;
-      if (file_exists($filePath)) {
-        if (!unlink($filePath)) {
-          http_response_code(400);
-          echo "Error with deleting img";
+    try {
+      // если в пути содержится слеш, то есть файл в какой-то папке
+      if ($slash !== false) {
+        $fileName = substr($picName, $slash + 1, strlen($picName) - 1);
+  
+        $filePath = $dirToSaveImg . $fileName;
+        if (file_exists($filePath)) {
+          if (!unlink($filePath)) {
+            http_response_code(400);
+            echo "Error with deleting img";
+            return false;
+          }
+        } else {
+          http_response_code(404);
+          echo "File not found";
           return false;
         }
-      } else {
-        http_response_code(404);
-        echo "File not found";
-        return false;
-      }
-    } //если не дай бог файл вне папки, а на корню с проектом
-    else {
-      if (file_exists($picName)) {
-        if (!unlink($picName)) {
-          http_response_code(400);
-          echo "Error with deleting img";
+      } //если не дай бог файл вне папки, а на корню с проектом
+      else {
+        if (file_exists($picName)) {
+          if (!unlink($picName)) {
+            http_response_code(400);
+            echo "Error with deleting img";
+          }
         }
       }
+    } catch(Exception $e) {
+      echo $e;
     }
   }
 
