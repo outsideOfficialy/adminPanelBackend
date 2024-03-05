@@ -15,13 +15,13 @@ include("./functions.php");
 $url = $_GET["url"];
 $req = explode("/", $url);
 
-if (
-  strpos($_SERVER["HTTP_REFERER"], "www.admin.outside-official.com") === false &&
-  ($_SERVER["REQUEST_METHOD"] === "DELETE" || $_SERVER["REQUEST_METHOD"] === "POST")
-) {
-  http_response_code(403);
-  die("Access Denied!.");
-}
+// if (
+//   strpos($_SERVER["HTTP_REFERER"], "www.admin.outside-official.com") === false &&
+//   ($_SERVER["REQUEST_METHOD"] === "DELETE" || $_SERVER["REQUEST_METHOD"] === "POST")
+// ) {
+//   http_response_code(403);
+//   die("Access Denied!.");
+// }
 
 if ($req[0] == "") array_shift($req);
 
@@ -96,15 +96,18 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         $recordId = $req[1];
         $dataToEdit = findByID($recordId, $config[$page]["tableName"], $db);
 
-        $successDeletion;
-        if (isset($dataToEdit["preview_picture"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture"]));
-        if (isset($dataToEdit["preview_picture_mobile"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_mobile"]));
-        if (isset($dataToEdit["preview_picture_desktop"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_desktop"]));
 
-        if (!$successDeletion) {
-          http_response_code(400);
-          echo "Error deleting img!";
-          // exit;
+        foreach ($_FILES as $key => $val) {
+          if ($_FILES[$key]["name"][0]) {
+            $successDeletion;
+            if (isset($dataToEdit["preview_picture"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture"]));
+            if (isset($dataToEdit["preview_picture_mobile"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_mobile"]));
+            if (isset($dataToEdit["preview_picture_desktop"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_desktop"]));
+
+            if (!$successDeletion) {
+              echo "Error deleting img!";
+            }
+          }
         }
 
         if (!$dataToEdit) {
@@ -174,13 +177,12 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo "Error deleting img!";
         // exit;
       }
-      
+
       if (recordDelete($db, $id, $tableName)) {
         http_response_code(200);
         echo "Field with id:$id successfully deleted";
         exit;
-      }
-      else {
+      } else {
         http_response_code(400);
         echo "Field unsuccessfully deleted (";
         exit;
