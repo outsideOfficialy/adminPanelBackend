@@ -15,13 +15,13 @@ include("./functions.php");
 $url = $_GET["url"];
 $req = explode("/", $url);
 
-// if (
-//   strpos($_SERVER["HTTP_REFERER"], "www.admin.outside-official.com") === false &&
-//   ($_SERVER["REQUEST_METHOD"] === "DELETE" || $_SERVER["REQUEST_METHOD"] === "POST")
-// ) {
-//   http_response_code(403);
-//   die("Access Denied!.");
-// }
+if (
+  strpos($_SERVER["HTTP_REFERER"], "www.admin.outside-official.com") === false &&
+  ($_SERVER["REQUEST_METHOD"] === "DELETE" || $_SERVER["REQUEST_METHOD"] === "POST")
+) {
+  http_response_code(403);
+  die("Access Denied!.");
+}
 
 if ($req[0] == "") array_shift($req);
 
