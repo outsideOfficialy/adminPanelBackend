@@ -184,11 +184,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo "Field with id:$id successfully deleted";
         exit;
       }
-      if (deleteImg(json_decode($recordToDelete["preview_picture"]))) {
-      } else {
-        echo "error with deleting img";
-        exit;
-      }
+      deleteImg(json_decode($recordToDelete["preview_picture"]));
       break;
     }
   default:
