@@ -176,13 +176,11 @@ function deleteImg($picArray)
           http_response_code(400);
           echo "Error with deleting img";
           return false;
-          exit;
         }
       } else {
         http_response_code(404);
         echo "File not found";
-        // return false;
-        exit;
+        return false;
       }
     } //если не дай бог файл вне папки, а на корню с проектом
     else {
