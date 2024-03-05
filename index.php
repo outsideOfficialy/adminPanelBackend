@@ -164,10 +164,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 
       $recordToDelete = findByID($id, $tableName, $db);
 
-      print_r($recordToDelete);
-
-      //exit;
-
       $successDeletion;
       if (isset($recordToDelete["preview_picture"])) $successDeletion = deleteImg(json_decode($recordToDelete["preview_picture"]));
       if (isset($recordToDelete["preview_picture_mobile"])) $successDeletion = deleteImg(json_decode($recordToDelete["preview_picture_mobile"]));
@@ -178,13 +174,13 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo "Error deleting img!";
         exit;
       }
-
+      
+      deleteImg(json_decode($recordToDelete["preview_picture"]));
       if (recordDelete($db, $id, $tableName)) {
         http_response_code(200);
         echo "Field with id:$id successfully deleted";
         exit;
       }
-      deleteImg(json_decode($recordToDelete["preview_picture"]));
       break;
     }
   default:
