@@ -173,12 +173,10 @@ function deleteImg($picArray)
       $filePath = $dirToSaveImg . $fileName;
       if (file_exists($filePath)) {
         if (!unlink($filePath)) {
-          http_response_code(400);
           echo "Error with deleting img";
           return false;
         }
       } else {
-        http_response_code(404);
         echo "File not found";
         return false;
       }
@@ -186,7 +184,6 @@ function deleteImg($picArray)
     else {
       if (file_exists($picName)) {
         if (!unlink($picName)) {
-          http_response_code(400);
           echo "Error with deleting img";
         }
       }
@@ -284,6 +281,69 @@ function recordCreate($db, $post, $tableName, $page)
   saveTableToJson($config[$page]["tableName"], $db, $config[$page]["jsonName"]);
 }
 
+function recordEdit($db, $post, $tableName, $page, $req)
+{
+  global $config;
+  // !редактирование записи....
+  $recordId = $req[1];
+  $dataToEdit = findByID($recordId, $config[$page]["tableName"], $db);
+
+  // удаление всех картинок которые были переданы на замещение
+  foreach ($_FILES as $key => $val) {
+    if ($_FILES[$key]["name"][0]) {
+      $successDeletion = true;
+      if (isset($dataToEdit["preview_picture"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture"]));
+      if (isset($dataToEdit["preview_picture_mobile"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_mobile"]));
+      if (isset($dataToEdit["preview_picture_desktop"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_desktop"]));
+
+      if (!$successDeletion) {
+        echo "Error deleting img!";
+      }
+    }
+  }
+
+  // если не было найдено записи для удаления
+  if (!$dataToEdit) {
+    http_response_code(404);
+    echo "Record wasn't found!";
+    exit;
+  }
+
+  // удаление записи
+  if (!recordDelete($db, $recordId, $tableName)) {
+    http_response_code(400);
+    echo "Error with row deleting";
+    exit;
+  }
+  // добавление даты в названии картинки
+  addTimeToImg();
+
+  // перепись картинок и их сохранение
+  foreach ($_FILES as $key => $val) {
+    foreach ($val["name"] as $idx => $picName) {
+      if ($picName !== "") {
+        saveImg($_FILES);
+        $dataToEdit[$key] = json_encode(addPathesToImgs($_FILES[$key]["name"]));
+      }
+    }
+  }
+
+  // перезапись данных в ранее существовавший объект
+  foreach ($post as $key => $val) {
+    $dataToEdit[$key] = $post[$key];
+  }
+
+  // перезапись поля "дата размещения" если такое есть
+  if (isset($dataToEdit["date_posting"])) $dataToEdit["date_posting"] = date("d/m/Y");
+
+  // попытка вставить запись в таблицу
+  if (!insertToTable($db, $tableName, $dataToEdit)) {
+    http_response_code(400);
+    echo "Error with record rewriting";
+    exit;
+  }
+}
+
 function recordDelete($db, $id, $tableName)
 {
   $id = SQLite3::escapeString($id);
@@ -315,10 +375,10 @@ function dbCreation($db, $page, $tableName)
     case "news":
       $fields = "id TEXT PRIMARY KEY,
           title TEXT,
-          subtitle TEXT,
           content TEXT,
           preview_picture TEXT,
-          send_later TEXT";
+          send_later TEXT,
+          date_posting TEXT";
       break;
     case "merch":
       $fields = "id TEXT PRIMARY KEY,

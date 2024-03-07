@@ -87,60 +87,15 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         $post["social_media_links"] = json_encode($post["social_media_links"]);
       }
       if (!isset($post["send_later"]) || $post["send_later"] == "") $post["send_later"] = "-";
+
+      // добавляем текущую дату для размещения...
+      if ($page == "news") $post["date_posting"] = date("d/m/Y");
       dbCreation($db, $page, $tableName);
 
       if ($post["id"] === "") {
         recordCreate($db, $post, $tableName, $page);
       } else {
-        // !редактирование записи....
-        $recordId = $req[1];
-        $dataToEdit = findByID($recordId, $config[$page]["tableName"], $db);
-
-
-        foreach ($_FILES as $key => $val) {
-          if ($_FILES[$key]["name"][0]) {
-            $successDeletion;
-            if (isset($dataToEdit["preview_picture"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture"]));
-            if (isset($dataToEdit["preview_picture_mobile"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_mobile"]));
-            if (isset($dataToEdit["preview_picture_desktop"])) $successDeletion = deleteImg(json_decode($dataToEdit["preview_picture_desktop"]));
-
-            if (!$successDeletion) {
-              echo "Error deleting img!";
-            }
-          }
-        }
-
-        if (!$dataToEdit) {
-          http_response_code(404);
-          echo "Record wasn't found!";
-          exit;
-        }
-
-        if (!recordDelete($db, $recordId, $tableName)) {
-          http_response_code(400);
-          echo "Error with row deleting";
-          exit;
-        }
-        addTimeToImg();
-
-        foreach ($_FILES as $key => $val) {
-          foreach ($val["name"] as $idx => $picName) {
-            if ($picName !== "") {
-              saveImg($_FILES);
-              $dataToEdit[$key] = json_encode(addPathesToImgs($_FILES[$key]["name"]));
-            }
-          }
-        }
-
-        foreach ($post as $key => $val) {
-          $dataToEdit[$key] = $post[$key];
-        }
-
-        if (!insertToTable($db, $tableName, $dataToEdit)) {
-          http_response_code(400);
-          echo "Error with record rewriting";
-          exit;
-        }
+        recordEdit($db, $post, $tableName, $page, $req);
       }
       break;
     }
