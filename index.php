@@ -89,10 +89,10 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       if (!isset($post["send_later"]) || $post["send_later"] == "") $post["send_later"] = "-";
 
       // добавляем текущую дату для размещения...
-      if ($page == "news") $post["date_posting"] = date("d/m/Y");
       dbCreation($db, $page, $tableName);
-
+      
       if ($post["id"] === "") {
+        if ($page == "news") $post["date_posting"] = date("d/m/Y");
         recordCreate($db, $post, $tableName, $page);
       } else {
         recordEdit($db, $post, $tableName, $page, $req);

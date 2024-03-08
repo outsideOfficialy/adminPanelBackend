@@ -287,7 +287,7 @@ function recordEdit($db, $post, $tableName, $page, $req)
   // !редактирование записи....
   $recordId = $req[1];
   $dataToEdit = findByID($recordId, $config[$page]["tableName"], $db);
-
+  
   // удаление всех картинок которые были переданы на замещение
   foreach ($_FILES as $key => $val) {
     if ($_FILES[$key]["name"][0]) {
@@ -334,7 +334,7 @@ function recordEdit($db, $post, $tableName, $page, $req)
   }
 
   // перезапись поля "дата размещения" если такое есть
-  if (isset($dataToEdit["date_posting"])) $dataToEdit["date_posting"] = date("d/m/Y");
+  // if (isset($dataToEdit["date_posting"])) $dataToEdit["date_posting"] = date("d/m/Y");
 
   // попытка вставить запись в таблицу
   if (!insertToTable($db, $tableName, $dataToEdit)) {
